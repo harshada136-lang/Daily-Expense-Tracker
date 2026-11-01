@@ -122,7 +122,7 @@ def inject_globals():
     return {'current_user': current_user(), 'today_iso': date.today().isoformat()}
 
 
-@app.route('/')
+@app.route('/', methods=['GET', 'POST'])
 @app.route('/index.php', methods=['GET', 'POST'])
 def login():
     if session.get('uid'):
