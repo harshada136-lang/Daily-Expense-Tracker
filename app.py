@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, redirect, url_for, session, flash, abort
+from flask import Flask, render_template, request, redirect, url_for, session, flash, abort, send_from_directory
 from werkzeug.security import generate_password_hash, check_password_hash
 from functools import wraps
 from datetime import date, timedelta
@@ -7,10 +7,29 @@ import sqlite3, os, hashlib, re
 BASE_DIR = os.path.abspath(os.path.dirname(__file__))
 DB_PATH = os.path.join(BASE_DIR, 'detsdb.sqlite3')
 DUMP_PATH = os.path.join(BASE_DIR, 'original_detsdb.sql')
-app = Flask(__name__, static_folder='static')
+app = Flask(__name__, static_folder=None)
 app.secret_key = os.environ.get('SECRET_KEY', 'dets-local-change-this-key')
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+
+
+# Serve frontend assets from the repository root.
+# The CSS, JS, fonts and image folders are currently at the repository root,
+# rather than inside a "static" folder.
+@app.route('/static/<path:filename>', endpoint='static')
+def serve_static(filename):
+    allowed_dirs = {
+        'css', 'js', 'fonts', 'bootstrap', 'flot',
+        'flot.tooltip', 'gmaps', 'images', 'jquery',
+        'sticky-kit-master', 'styleswitcher'
+    }
+
+    first_folder = filename.split('/', 1)[0]
+    if first_folder not in allowed_dirs:
+        abort(404)
+
+    return send_from_directory(BASE_DIR, filename)
+
 
 
 def get_db():
